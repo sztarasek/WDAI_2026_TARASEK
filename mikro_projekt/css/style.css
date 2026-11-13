@@ -1,8 +1,169 @@
-* {
-    margin: 0;
-    padding: 0;
+:root {
+  --color-background: #171a1b;
+  --color-secondary: #263f3d;
+  --color-accent: #b58a60;
+  --color-text: #e8e2d8;
+  --color-muted: #9b9c98;
+  --font-heading: "Cormorant Garamond", serif;
+  --font-body: "Inter", sans-serif;
 }
 
-body {
-    background-color: beige;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+header {
+  background-color: var(--color-background);
+  border-bottom: 1px solid #333735;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 40px;
+}
+
+.logo {
+  font-family: var(--font-body);
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 8px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: var(--color-accent);
+}
+
+.nav-links a.active {
+  color: var(--color-text);
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.arrow {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 150%;
+  min-width: 180px;
+  list-style: none;
+  background-color: var(--color-secondary);
+  border: 1px solid #3b514e;
+  padding: 8px 0;
+  z-index: 10;
+}
+
+.dropdown-menu a {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 24px;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.dropdown-menu a:hover {
+  background-color: var(--color-background);
+}
+
+.dropdown:hover .dropdown-menu,
+.dropdown:focus-within .dropdown-menu {
+  display: flex;
+}
+
+.dropdown:hover .arrow,
+.dropdown:focus-within .arrow {
+  transform: rotate(225deg);
+}
+
+img {
+  max-width: 100%;
+}
+
+footer {
+  background-color: var(--color-background);
+  border-top: 1px solid #333735;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40px 40px;
+  margin: 0 auto;
+  max-width: 1400px;
+  font-family: var(--font-body);
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.footer-brand {
+  color: var(--color-text);
+  font-weight: 400;
+  letter-spacing: 1.5px;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-socials a {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.footer-socials a:hover {
+  color: var(--color-accent);
 }
