@@ -14,7 +14,14 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(
       ellipse at 80% 20%,
@@ -22,6 +29,10 @@ body {
       transparent 55%
     ),
     linear-gradient(135deg, #171a1b 0%, #1c2929 100%);
+}
+
+main {
+  flex: 1;
 }
 
 header {
@@ -331,7 +342,7 @@ header {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
+  height: 80vh;
 }
 
 .timer-heading {
