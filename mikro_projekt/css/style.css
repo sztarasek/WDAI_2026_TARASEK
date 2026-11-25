@@ -15,17 +15,13 @@
 }
 
 body {
-    background:
+  background:
     radial-gradient(
-    ellipse at 80% 20%,
-    rgba(38, 63, 61, 0.85) 0%,
-    transparent 55%
+      ellipse at 80% 20%,
+      rgba(38, 63, 61, 0.85) 0%,
+      transparent 55%
     ),
-    linear-gradient(
-    135deg,
-    #171a1b 0%,
-    #1c2929 100%
-  );
+    linear-gradient(135deg, #171a1b 0%, #1c2929 100%);
 }
 
 header {
@@ -126,6 +122,7 @@ header {
 .dropdown:hover .dropdown-menu,
 .dropdown:focus-within .dropdown-menu {
   display: flex;
+  flex-direction: column;
 }
 
 .dropdown:hover .arrow,
@@ -133,28 +130,43 @@ header {
   transform: rotate(225deg);
 }
 
+.nav-links .contact-button {
+  display: inline-block;
+  padding: 10px 22px;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-background);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-links .contact-button:hover {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
 .hero {
-    min-height: 90vh;
-    background-image: linear-gradient(rgba(23, 26, 27, 0.6), rgba(23, 26, 27, 0.6)),
+  min-height: 90vh;
+  background-image:
+    linear-gradient(45deg, rgba(23, 26, 27, 0.9), rgba(23, 26, 27, 0.2)),
     url("../assets/hero.webp");
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    padding: 10%;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: end;
+  padding: 10%;
 }
 
 .hero-content h1 {
-    font-family: var(--font-heading);
-    font-size: clamp(3rem, 7vw, 6.5rem);
-    font-weight: 700;
-    line-height: 1.05;
-    color: var(--color-text);
-    
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--color-text);
 }
 
 .hero-content h1 span {
-    color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .about {
@@ -274,10 +286,22 @@ header {
   background-color: var(--color-secondary);
 }
 
+.gallery-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(23, 26, 27, 0.8), transparent 55%);
+}
+
 .gallery-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.05);
 }
 
 .gallery-item h3 {
@@ -303,26 +327,26 @@ header {
 }
 
 .timer-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
 }
 
 .timer-heading {
-    text-align: center;
-    font-family: var(--font-body);
-    font-weight: 300;
-    font-size: 2,4rem;
-    color: var(--color-text);
+  text-align: center;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 2, 4rem;
+  color: var(--color-text);
 }
 
 .timer {
-    font-family: var(--font-body);
-    font-size: 64px;
-    font-weight: 700;
-    color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--color-accent);
 }
 
 footer {
