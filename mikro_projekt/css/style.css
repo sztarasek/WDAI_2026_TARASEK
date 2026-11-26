@@ -360,6 +360,111 @@ header {
   color: var(--color-accent);
 }
 
+.contact {
+  min-height: 80vh;
+  padding: 80px 20px 100px;
+  color: var(--color-text);
+}
+
+.contact-heading {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 50px;
+}
+
+.contact-heading h4 {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: var(--color-accent);
+  margin-bottom: 15px;
+}
+
+.contact-heading h1 {
+  font-family: var(--font-heading);
+  font-size: 4rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.contact-heading p {
+  font-family: var(--font-body);
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.contact-form {
+  max-width: 650px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group label {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--color-secondary);
+  border: 1px solid #40534f;
+  border-radius: 2px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--color-muted);
+}
+
+.form-group select {
+  cursor: pointer;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.contact-form input[type="submit"] {
+  align-self: flex-start;
+  padding: 15px 35px;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  color: var(--color-background);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.contact-form input[type="submit"]:hover {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
 footer {
   background-color: var(--color-background);
   border-top: 1px solid #333735;
