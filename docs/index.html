@@ -28,13 +28,11 @@
   <body>
     <canvas id="c" width="288" height="512"></canvas>
     <script>
-      // ====== ASSET PATHS (adjust if your folders are named differently) ======
+      // ====== ASSET PATHS ======
       const BIRD_DIR = "Assets/Flappy Bird/";
       const SFX_DIR = "Assets/Sound Effects/";
       const UI_DIR = "Assets/UI/";
       const NUM_DIR = UI_DIR + "Numbers/";
-      const MUSIC_SRC = SFX_DIR + "music.mp3"; // optional; a synthesized loop is used if missing
-
       // ====== CONSTANTS ======
       const W = 288,
         H = 512,
@@ -80,20 +78,7 @@
           a.play().catch(() => {});
         } catch (e) {}
       };
-
-      // ====== MUSIC (file or WebAudio fallback) ======
-      const music = new Audio(MUSIC_SRC);
-      music.loop = true;
-      music.volume = 0.4;
-      let musicStarted = false,
-        fallbackTimer = null,
-        actx = null;
-      function startMusic() {
-        if (musicStarted) return;
-        musicStarted = true;
-        music.play().catch(startFallback);
-        music.onerror = startFallback;
-      }
+      
       function startFallback() {
         if (fallbackTimer) return;
         actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -136,7 +121,7 @@
       let lastScore = 0;
 
       // ====== GAME STATE ======
-      let state = "menu"; // menu | playing | dying | over
+      let state = "menu";
       let bird,
         pipes,
         score,
@@ -162,21 +147,21 @@
       }
       function flap() {
         bird.vy = FLAP_V;
-        play("wing");
+        // play("wing");
       }
 
       function action() {
-        startMusic();
+        // startMusic();
         if (state === "menu") {
           reset();
           state = "playing";
-          play("swoosh");
+          // play("swoosh");
           flap();
         } else if (state === "playing") flap();
         else if (state === "over" && overT > 0.4) {
           reset();
           state = "playing";
-          play("swoosh");
+          // play("swoosh");
           flap();
         }
       }
@@ -200,8 +185,8 @@
       // ====== UPDATE ======
       function die(byPipe) {
         state = "dying";
-        play("hit");
-        if (byPipe) setTimeout(() => play("die"), 200);
+        // play("hit");
+        // if (byPipe) setTimeout(() => play("die"), 200);
         lastScore = score;
         saveScore(score);
       }
@@ -229,7 +214,7 @@
             if (!p.scored && p.x + PIPE_W < BIRD_X - BIRD_R) {
               p.scored = true;
               score++;
-              play("point");
+              // play("point");
             }
             if (
               circleRect(BIRD_X, bird.y, BIRD_R, p.x, 0, PIPE_W, p.top) ||
@@ -255,12 +240,12 @@
             }
           } else {
             bird.angle = Math.PI / 2;
-            sink = Math.min(8, sink + 40 * dt); // bird digs into the ground
+            sink = Math.min(8, sink + 40 * dt);
             overT += dt;
             if (overT > 0.7) {
               state = "over";
               overT = 0;
-              play("swoosh");
+              // play("swoosh");
             }
           }
         } else if (state === "over") overT += dt;
@@ -285,18 +270,16 @@
       function draw() {
         ctx.drawImage(img.bg, 0, 0, W, H);
 
-        // pipes
         if (state !== "menu")
           for (const p of pipes) {
             ctx.save();
             ctx.translate(p.x, p.top);
             ctx.scale(1, -1);
             ctx.drawImage(img.pipe, 0, 0);
-            ctx.restore(); // top (flipped)
-            ctx.drawImage(img.pipe, p.x, p.top + p.gap); // bottom
+            ctx.restore();
+            ctx.drawImage(img.pipe, p.x, p.top + p.gap);
           }
 
-        // bird
         if (state !== "menu") {
           const frames = [img.up, img.mid, img.down, img.mid];
           const f =
@@ -310,7 +293,6 @@
           ctx.restore();
         }
 
-        // base (scrolling) drawn over the bird so it can sink into it
         for (let x = baseX; x < W; x += img.base.width)
           ctx.drawImage(img.base, Math.round(x), GROUND_Y);
 
