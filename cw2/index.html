@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Generator haseł</title>
+  </head>
+  <body>
+    <h1>Generator haseł</h1>
+
+    <p>
+      <label for="minLen">Minimalna długość hasła:</label>
+      <input type="text" id="minLen" value="8" />
+    </p>
+    <p>
+      <label for="maxLen">Maksymalna długość hasła:</label>
+      <input type="text" id="maxLen" value="12" />
+    </p>
+    <p>
+      <label><input type="checkbox" id="upper" /> Wielkie litery</label>
+    </p>
+    <p>
+      <label><input type="checkbox" id="special" /> Znaki specjalne</label>
+    </p>
+    <p>
+      <button id="generate">Wygeneruj hasło</button>
+    </p>
+
+    <script>
+      var LOWER = "abcdefghijklmnopqrstuvwxyz";
+      var UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      var DIGITS = "0123456789";
+      var SPECIAL = "!@#$%^&*()-_=+[]{};:,.<>?";
+
+      function randomInt(max) {
+        var buf = new Uint32Array(1);
+        var limit = Math.floor(4294967296 / max) * max;
+        do {
+          crypto.getRandomValues(buf);
+        } while (buf[0] >= limit);
+        return buf[0] % max;
+      }
+
+      function randomChar(set) {
+        return set.charAt(randomInt(set.length));
+      }
+
+      function generatePassword(minLen, maxLen, useUpper, useSpecial) {
+        var length = minLen + randomInt(maxLen - minLen + 1);
+
+        var sets = [LOWER, DIGITS];
+        if (useUpper) sets.push(UPPER);
+        if (useSpecial) sets.push(SPECIAL);
+
+        var all = sets.join("");
+        var chars = [];
+        var i;
+
+        for (i = 0; i < sets.length; i++) {
+          chars.push(randomChar(sets[i]));
+        }
+        while (chars.length < length) {
+          chars.push(randomChar(all));
+        }
+
+        for (i = chars.length - 1; i > 0; i--) {
+          var j = randomInt(i + 1);
+          var tmp = chars[i];
+          chars[i] = chars[j];
+          chars[j] = tmp;
+        }
+        return chars.join("");
+      }
+
+      document
+        .getElementById("generate")
+        .addEventListener("click", function () {
+          var minText = document.getElementById("minLen").value.trim();
+          var maxText = document.getElementById("maxLen").value.trim();
+          var useUpper = document.getElementById("upper").checked;
+          var useSpecial = document.getElementById("special").checked;
+
+          if (!/^\d+$/.test(minText) || !/^\d+$/.test(maxText)) {
+            alert(
+              "Minimalna i maksymalna długość muszą być liczbami całkowitymi.",
+            );
+            return;
+          }
+
+          var minLen = parseInt(minText, 10);
+          var maxLen = parseInt(maxText, 10);
+          var requiredMin = 2 + (useUpper ? 1 : 0) + (useSpecial ? 1 : 0);
+
+          if (minLen < requiredMin) {
+            alert(
+              "Minimalna długość dla wybranych ustawień to " +
+                requiredMin +
+                ".",
+            );
+            return;
+          }
+          if (minLen > maxLen) {
+            alert("Minimalna długość nie może być większa od maksymalnej.");
+            return;
+          }
+          if (maxLen > 256) {
+            alert("Maksymalna długość to 256 znaków.");
+            return;
+          }
+
+          alert(generatePassword(minLen, maxLen, useUpper, useSpecial));
+        });
+    </script>
+  </body>
+</html>

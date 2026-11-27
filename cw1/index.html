@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Stoper</title>
+  </head>
+  <body>
+    <main>
+      <h1>Stoper</h1>
+      <div id="display" role="timer" aria-live="off">0s</div>
+      <div class="buttons">
+        <button id="start">Start</button>
+        <button id="stop" class="secondary">Stop</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+    </main>
+    <script>
+      (function () {
+        var display = document.getElementById("display");
+        var elapsed = 0; // zgromadzony czas w ms
+        var startedAt = null; // moment ostatniego startu
+        var timer = null;
+
+        function format(ms) {
+          var total = Math.floor(ms / 1000);
+          var min = Math.floor(total / 60);
+          var s = total % 60;
+          return min > 0 ? min + "min " + s + "s" : s + "s";
+        }
+
+        function current() {
+          return elapsed + (startedAt !== null ? Date.now() - startedAt : 0);
+        }
+
+        function render() {
+          display.textContent = format(current());
+        }
+
+        function start() {
+          if (timer !== null) return; // już działa
+          startedAt = Date.now();
+          timer = setInterval(render, 100);
+        }
+
+        function stop() {
+          if (timer === null) return;
+          elapsed = current();
+          startedAt = null;
+          clearInterval(timer);
+          timer = null;
+          render();
+        }
+
+        function reset() {
+          clearInterval(timer);
+          timer = null;
+          startedAt = null;
+          elapsed = 0;
+          render();
+        }
+
+        document.getElementById("start").addEventListener("click", start);
+        document.getElementById("stop").addEventListener("click", stop);
+        document.getElementById("reset").addEventListener("click", reset);
+        render();
+      })();
+    </script>
+  </body>
+</html>

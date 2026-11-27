@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flappy Bird</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #222;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      canvas {
+        height: 100vh;
+        max-width: 100vw;
+        aspect-ratio: 288/512;
+        image-rendering: pixelated;
+        touch-action: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="288" height="512"></canvas>
+    <script>
+      // ====== ASSET PATHS (adjust if your folders are named differently) ======
+      const BIRD_DIR = "Assets/Flappy Bird/";
+      const SFX_DIR = "Assets/Sound Effects/";
+      const UI_DIR = "Assets/UI/";
+      const NUM_DIR = UI_DIR + "Numbers/";
+      const MUSIC_SRC = SFX_DIR + "music.mp3"; // optional; a synthesized loop is used if missing
+
+      // ====== CONSTANTS ======
+      const W = 288,
+        H = 512,
+        GROUND_Y = 400;
+      const GRAVITY = 900,
+        FLAP_V = -300,
+        SPEED = 120;
+      const PIPE_W = 52,
+        PIPE_SPACING = 170,
+        GAP_MIN = 90,
+        GAP_MAX = 130;
+      const BIRD_X = 70,
+        BIRD_R = 11;
+      const KEY = "flappyTop5";
+
+      const cv = document.getElementById("c"),
+        ctx = cv.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+
+      // ====== LOADING ======
+      const img = {};
+      const load = (k, src) =>
+        new Promise((r) => {
+          const i = new Image();
+          i.onload = () => {
+            img[k] = i;
+            r();
+          };
+          i.onerror = () => {
+            console.warn("Missing", src);
+            img[k] = new Image();
+            r();
+          };
+          i.src = src;
+        });
+      const sfx = {};
+      ["die", "hit", "point", "swoosh", "wing"].forEach(
+        (n) => (sfx[n] = new Audio(SFX_DIR + n + ".wav")),
+      );
+      const play = (n) => {
+        try {
+          const a = sfx[n].cloneNode();
+          a.play().catch(() => {});
+        } catch (e) {}
+      };
+
+      // ====== MUSIC (file or WebAudio fallback) ======
+      const music = new Audio(MUSIC_SRC);
+      music.loop = true;
+      music.volume = 0.4;
+      let musicStarted = false,
+        fallbackTimer = null,
+        actx = null;
+      function startMusic() {
+        if (musicStarted) return;
+        musicStarted = true;
+        music.play().catch(startFallback);
+        music.onerror = startFallback;
+      }
+      function startFallback() {
+        if (fallbackTimer) return;
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [
+          262, 330, 392, 330, 294, 349, 440, 349, 262, 330, 392, 523, 392, 330,
+          294, 196,
+        ];
+        let i = 0;
+        fallbackTimer = setInterval(() => {
+          const o = actx.createOscillator(),
+            g = actx.createGain();
+          o.type = "triangle";
+          o.frequency.value = notes[i++ % notes.length];
+          g.gain.setValueAtTime(0.08, actx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.25);
+          o.connect(g);
+          g.connect(actx.destination);
+          o.start();
+          o.stop(actx.currentTime + 0.25);
+        }, 250);
+      }
+
+      // ====== SCORES ======
+      const getTop = () => {
+        try {
+          return JSON.parse(localStorage.getItem(KEY)) || [];
+        } catch (e) {
+          return [];
+        }
+      };
+      function saveScore(s) {
+        const t = getTop();
+        t.push(s);
+        t.sort((a, b) => b - a);
+        t.length = Math.min(t.length, 5);
+        try {
+          localStorage.setItem(KEY, JSON.stringify(t));
+        } catch (e) {}
+      }
+      let lastScore = 0;
+
+      // ====== GAME STATE ======
+      let state = "menu"; // menu | playing | dying | over
+      let bird,
+        pipes,
+        score,
+        baseX = 0,
+        animT = 0,
+        overT = 0,
+        sink = 0,
+        hitGround = false;
+
+      function reset() {
+        bird = { y: 240, vy: 0, angle: 0 };
+        pipes = [];
+        score = 0;
+        sink = 0;
+        hitGround = false;
+        overT = 0;
+        spawnPipe(W + 40);
+      }
+      function spawnPipe(x) {
+        const gap = GAP_MIN + Math.random() * (GAP_MAX - GAP_MIN);
+        const top = 60 + Math.random() * (GROUND_Y - gap - 120);
+        pipes.push({ x, top, gap, scored: false });
+      }
+      function flap() {
+        bird.vy = FLAP_V;
+        play("wing");
+      }
+
+      function action() {
+        startMusic();
+        if (state === "menu") {
+          reset();
+          state = "playing";
+          play("swoosh");
+          flap();
+        } else if (state === "playing") flap();
+        else if (state === "over" && overT > 0.4) {
+          reset();
+          state = "playing";
+          play("swoosh");
+          flap();
+        }
+      }
+      addEventListener("keydown", (e) => {
+        if (e.code === "Space" || (e.code === "Enter" && state === "over")) {
+          e.preventDefault();
+          if (!e.repeat) action();
+        }
+      });
+      const BTN = { x: 64, y: 336, w: 160, h: 40 };
+      cv.addEventListener("pointerdown", (e) => {
+        const r = cv.getBoundingClientRect();
+        const x = ((e.clientX - r.left) * W) / r.width,
+          y = ((e.clientY - r.top) * H) / r.height;
+        if (state === "over") {
+          if (x > BTN.x && x < BTN.x + BTN.w && y > BTN.y && y < BTN.y + BTN.h)
+            action();
+        } else action();
+      });
+
+      // ====== UPDATE ======
+      function die(byPipe) {
+        state = "dying";
+        play("hit");
+        if (byPipe) setTimeout(() => play("die"), 200);
+        lastScore = score;
+        saveScore(score);
+      }
+      function update(dt) {
+        animT += dt;
+        if (state !== "dying" && state !== "over")
+          baseX = (baseX - SPEED * dt) % 48;
+
+        if (state === "playing") {
+          bird.vy += GRAVITY * dt;
+          bird.y += bird.vy * dt;
+          if (bird.y < BIRD_R) {
+            bird.y = BIRD_R;
+            bird.vy = 0;
+          }
+          bird.angle =
+            (Math.max(-25, Math.min(90, bird.vy / 6)) * Math.PI) / 180;
+
+          pipes.forEach((p) => (p.x -= SPEED * dt));
+          if (pipes[0].x < -PIPE_W) pipes.shift();
+          if (pipes[pipes.length - 1].x < W - PIPE_SPACING + 0)
+            spawnPipe(pipes[pipes.length - 1].x + PIPE_SPACING);
+
+          for (const p of pipes) {
+            if (!p.scored && p.x + PIPE_W < BIRD_X - BIRD_R) {
+              p.scored = true;
+              score++;
+              play("point");
+            }
+            if (
+              circleRect(BIRD_X, bird.y, BIRD_R, p.x, 0, PIPE_W, p.top) ||
+              circleRect(BIRD_X, bird.y, BIRD_R, p.x, p.top + p.gap, PIPE_W, H)
+            ) {
+              die(true);
+              return;
+            }
+          }
+          if (bird.y + 12 >= GROUND_Y) {
+            bird.y = GROUND_Y - 12;
+            hitGround = true;
+            die(false);
+          }
+        } else if (state === "dying") {
+          if (!hitGround) {
+            bird.vy += GRAVITY * dt;
+            bird.y += bird.vy * dt;
+            bird.angle = Math.min(Math.PI / 2, bird.angle + 6 * dt);
+            if (bird.y + 12 >= GROUND_Y) {
+              bird.y = GROUND_Y - 12;
+              hitGround = true;
+            }
+          } else {
+            bird.angle = Math.PI / 2;
+            sink = Math.min(8, sink + 40 * dt); // bird digs into the ground
+            overT += dt;
+            if (overT > 0.7) {
+              state = "over";
+              overT = 0;
+              play("swoosh");
+            }
+          }
+        } else if (state === "over") overT += dt;
+      }
+      function circleRect(cx, cy, r, rx, ry, rw, rh) {
+        const nx = Math.max(rx, Math.min(cx, rx + rw)),
+          ny = Math.max(ry, Math.min(cy, ry + rh));
+        return (cx - nx) ** 2 + (cy - ny) ** 2 < r * r;
+      }
+
+      // ====== DRAW ======
+      function drawNumber(n, rightX, y) {
+        const digits = String(n)
+          .split("")
+          .map((d) => img["n" + d]);
+        let x = rightX - digits.reduce((s, d) => s + d.width, 0);
+        digits.forEach((d) => {
+          ctx.drawImage(d, x, y);
+          x += d.width;
+        });
+      }
+      function draw() {
+        ctx.drawImage(img.bg, 0, 0, W, H);
+
+        // pipes
+        if (state !== "menu")
+          for (const p of pipes) {
+            ctx.save();
+            ctx.translate(p.x, p.top);
+            ctx.scale(1, -1);
+            ctx.drawImage(img.pipe, 0, 0);
+            ctx.restore(); // top (flipped)
+            ctx.drawImage(img.pipe, p.x, p.top + p.gap); // bottom
+          }
+
+        // bird
+        if (state !== "menu") {
+          const frames = [img.up, img.mid, img.down, img.mid];
+          const f =
+            state === "dying" || state === "over"
+              ? img.mid
+              : frames[Math.floor(animT * 10) % 4];
+          ctx.save();
+          ctx.translate(BIRD_X, bird.y + sink);
+          ctx.rotate(bird.angle);
+          ctx.drawImage(f, -f.width / 2, -f.height / 2);
+          ctx.restore();
+        }
+
+        // base (scrolling) drawn over the bird so it can sink into it
+        for (let x = baseX; x < W; x += img.base.width)
+          ctx.drawImage(img.base, Math.round(x), GROUND_Y);
+
+        if (state === "menu") {
+          ctx.drawImage(img.msg, (W - img.msg.width) / 2, 90);
+        } else if (state !== "over") {
+          drawNumber(score, W - 10, 12);
+        }
+        if (state === "over") drawGameOver();
+      }
+      function drawGameOver() {
+        ctx.drawImage(img.over, (W - img.over.width) / 2, 50);
+        ctx.fillStyle = "#ded895";
+        ctx.strokeStyle = "#543847";
+        ctx.lineWidth = 3;
+        ctx.fillRect(24, 110, 240, 275);
+        ctx.strokeRect(24, 110, 240, 275);
+        const top = getTop();
+        ctx.font = "bold 16px monospace";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#543847";
+        ctx.textAlign = "left";
+        ctx.fillText("Wynik:", 40, 135);
+        ctx.textAlign = "right";
+        ctx.fillText(lastScore, 248, 135);
+        ctx.textAlign = "left";
+        ctx.fillText("Najlepszy:", 40, 160);
+        ctx.textAlign = "right";
+        ctx.fillText(top[0] ?? 0, 248, 160);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#e86101";
+        ctx.fillText("— TOP 5 —", W / 2, 192);
+        ctx.fillStyle = "#543847";
+        for (let i = 0; i < 5; i++) {
+          ctx.textAlign = "left";
+          ctx.fillText(i + 1 + ".", 70, 218 + i * 22);
+          ctx.textAlign = "right";
+          ctx.fillText(top[i] ?? "-", 218, 218 + i * 22);
+        }
+        ctx.fillStyle = "#e86101";
+        ctx.fillRect(BTN.x, BTN.y, BTN.w, BTN.h);
+        ctx.strokeRect(BTN.x, BTN.y, BTN.w, BTN.h);
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.fillText("Zagraj ponownie", W / 2, BTN.y + BTN.h / 2);
+      }
+
+      // ====== MAIN LOOP ======
+      let prev = 0;
+      function frame(t) {
+        const dt = Math.min(0.033, (t - prev) / 1000 || 0);
+        prev = t;
+        update(dt);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      Promise.all([
+        load("bg", BIRD_DIR + "background-day.png"),
+        load("base", BIRD_DIR + "base.png"),
+        load("pipe", BIRD_DIR + "pipe-green.png"),
+        load("up", BIRD_DIR + "yellowbird-upflap.png"),
+        load("mid", BIRD_DIR + "yellowbird-midflap.png"),
+        load("down", BIRD_DIR + "yellowbird-downflap.png"),
+        load("over", UI_DIR + "gameover.png"),
+        load("msg", UI_DIR + "message.png"),
+        ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) =>
+          load("n" + n, NUM_DIR + n + ".png"),
+        ),
+      ]).then(() => {
+        reset();
+        requestAnimationFrame(frame);
+      });
+    </script>
+  </body>
+</html>

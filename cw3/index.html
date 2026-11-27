@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produkty</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 16px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #999; padding: 6px; text-align: left; vertical-align: middle; }
+  img { width: 80px; height: 80px; object-fit: contain; display: block; }
+  #controls { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+  <div id="controls">
+    <input type="text" id="filter" placeholder="Filtruj po tytule lub opisie...">
+    <select id="sort">
+      <option value="original">Oryginalna kolejność</option>
+      <option value="asc">Rosnąco (po tytule)</option>
+      <option value="desc">Malejąco (po tytule)</option>
+    </select>
+  </div>
+
+  <p id="status">Ładowanie danych...</p>
+
+  <table id="table" hidden>
+    <thead>
+      <tr>
+        <th>Zdjęcie</th>
+        <th>Tytuł</th>
+        <th>Opis</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+<script>
+  var products = [];
+  var filterInput = document.getElementById("filter");
+  var sortSelect = document.getElementById("sort");
+  var tbody = document.getElementById("tbody");
+  var table = document.getElementById("table");
+  var status = document.getElementById("status");
+
+  function render() {
+    var phrase = filterInput.value.trim().toLowerCase();
+    var order = sortSelect.value;
+
+    var list = products.filter(function (p) {
+      return p.title.toLowerCase().indexOf(phrase) !== -1 ||
+             p.description.toLowerCase().indexOf(phrase) !== -1;
+    });
+
+    if (order === "asc") {
+      list.sort(function (a, b) { return a.title.localeCompare(b.title); });
+    } else if (order === "desc") {
+      list.sort(function (a, b) { return b.title.localeCompare(a.title); });
+    }
+
+    tbody.innerHTML = "";
+    list.forEach(function (p) {
+      var tr = document.createElement("tr");
+
+      var tdImg = document.createElement("td");
+      var img = document.createElement("img");
+      img.src = p.thumbnail;
+      img.alt = p.title;
+      tdImg.appendChild(img);
+
+      var tdTitle = document.createElement("td");
+      tdTitle.textContent = p.title;
+
+      var tdDesc = document.createElement("td");
+      tdDesc.textContent = p.description;
+
+      tr.appendChild(tdImg);
+      tr.appendChild(tdTitle);
+      tr.appendChild(tdDesc);
+      tbody.appendChild(tr);
+    });
+
+    if (list.length === 0) {
+      status.textContent = "Brak wyników.";
+      status.hidden = false;
+      table.hidden = true;
+    } else {
+      status.hidden = true;
+      table.hidden = false;
+    }
+  }
+
+  fetch("https://dummyjson.com/products?limit=30")
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      products = data.products.slice(0, 30);
+      render();
+    })
+    .catch(function (err) {
+      status.textContent = "Nie udało się pobrać danych: " + err.message;
+    });
+
+  filterInput.addEventListener("input", render);
+  sortSelect.addEventListener("change", render);
+</script>
+</body>
+</html>
